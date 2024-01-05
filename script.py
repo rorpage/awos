@@ -57,7 +57,7 @@ for sky_cond in weather.clouds:
     base = int(sky_cond.base / 1000)
     uom = 'thousand'
 
-  clouds_tts_string += '{} at {} {}.'.format(cover, base, uom)
+  clouds_tts_string += '{} at {} {}. '.format(cover, base, uom)
 
 clouds_tts_string += '.'
 
