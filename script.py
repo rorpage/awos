@@ -1,5 +1,4 @@
 from gtts import gTTS
-from metar_gg import MetarGG
 from tokenizer import Tokenizer
 from types import SimpleNamespace
 from utils import Utils
@@ -7,6 +6,7 @@ from utils import Utils
 import datetime
 import json
 import os
+import re
 import requests
 
 utils = Utils()
@@ -17,8 +17,24 @@ data = requests.get(weather_url)
 weather = json.loads(data.text, object_hook=lambda d: SimpleNamespace(**d))[0]
 
 # Location
-start = MetarGG().location(airport_code)
-start += 'Automated weather observation. '
+name = weather.name.split(',')[0]
+
+airport_name_abbreviations = {
+  'Intl': 'International',
+  'Rgnl': 'Regional',
+  'Natl': 'National',
+  'Mem': 'Memorial',
+  'Arpt': 'Airport',
+  'Fld': 'Field',
+  'Cnty': 'County',
+  'Ft': 'Fort',
+  'St': 'Saint',
+  'Airpark': 'air park',
+}
+
+for abbr, expansion in airport_name_abbreviations.items():
+  name = re.sub(r'\b{}\b'.format(abbr), expansion, name)
+start = '{}. Automated weather observation. '.format(name)
 
 # Observation time
 observation_timestamp = datetime.datetime.fromtimestamp(weather.obsTime)
@@ -66,7 +82,8 @@ temp = utils.zero_pad(round(weather.temp), True)
 temp_tts_string = 'Temperature {} Celsius. '.format(temp)
 
 # Dewpoint
-dewpoint = utils.zero_pad(round(weather.dewp), True)
+dewpoint = round(weather.dewp)
+dewpoint = 'minus {}'.format(abs(dewpoint)) if dewpoint < 0 else utils.zero_pad(dewpoint)
 dewpoint_tts_string = 'Dewpoint {} Celsius. '.format(dewpoint)
 
 # Pressure
